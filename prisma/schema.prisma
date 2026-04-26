@@ -21,25 +21,25 @@ model User {
 }
 
 model Pregnancy {
-  id              String        @id @default(uuid())
-  userId          String        @unique
-  startDate       DateTime
-  dueDate         DateTime?
-  currentWeek     Int?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  babyName        String?
-  babyNameBoy     String?
-  babyNameGirl    String?
-  babyGender      String?       @default("SURPRESA")
-  parentRole      String?       @default("MAE")
-  onboardingDone  Boolean       @default(false)
-  appointments    Appointment[]
-  babyRecords     BabyRecord[]
-  documents       Document[]
-  user            User          @relation(fields: [userId], references: [id])
-  questions       Question[]
-  reminders       Reminder[]
+  id             String        @id @default(uuid())
+  userId         String        @unique
+  startDate      DateTime
+  dueDate        DateTime?
+  currentWeek    Int?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  babyName       String?
+  babyNameBoy    String?
+  babyNameGirl   String?
+  babyGender     String?       @default("SURPRESA")
+  parentRole     String?       @default("MAE")
+  onboardingDone Boolean       @default(false)
+  appointments   Appointment[]
+  babyRecords    BabyRecord[]
+  documents      Document[]
+  user           User          @relation(fields: [userId], references: [id])
+  questions      Question[]
+  reminders      Reminder[]
 
   @@map("pregnancies")
 }

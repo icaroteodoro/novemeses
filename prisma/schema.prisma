@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id          String      @id @default(uuid())
+  firebaseUid String      @unique
+  email       String      @unique
+  name        String?
+  avatarUrl   String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  pregnancies Pregnancy[]
+
+  @@map("users")
+}
+
+model Pregnancy {
+  id              String        @id @default(uuid())
+  userId          String        @unique
+  startDate       DateTime
+  dueDate         DateTime?
+  currentWeek     Int?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  babyName        String?
+  babyNameBoy     String?
+  babyNameGirl    String?
+  babyGender      String?       @default("SURPRESA")
+  parentRole      String?       @default("MAE")
+  onboardingDone  Boolean       @default(false)
+  appointments    Appointment[]
+  babyRecords     BabyRecord[]
+  documents       Document[]
+  user            User          @relation(fields: [userId], references: [id])
+  questions       Question[]
+  reminders       Reminder[]
+
+  @@map("pregnancies")
+}
+
+model Document {
+  id          String    @id @default(uuid())
+  pregnancyId String
+  name        String
+  url         String
+  category    String
+  type        String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  pregnancy   Pregnancy @relation(fields: [pregnancyId], references: [id])
+
+  @@map("documents")
+}
+
+model Appointment {
+  id          String     @id @default(uuid())
+  pregnancyId String
+  date        DateTime
+  doctor      String?
+  location    String?
+  notes       String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  pregnancy   Pregnancy  @relation(fields: [pregnancyId], references: [id])
+  reminders   Reminder[]
+
+  @@map("appointments")
+}
+
+model Question {
+  id          String    @id @default(uuid())
+  pregnancyId String
+  content     String
+  status      String    @default("PENDENTE")
+  answer      String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  pregnancy   Pregnancy @relation(fields: [pregnancyId], references: [id])
+
+  @@map("questions")
+}
+
+model BabyRecord {
+  id          String    @id @default(uuid())
+  pregnancyId String
+  week        Int
+  weight      Float?
+  size        Float?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  pregnancy   Pregnancy @relation(fields: [pregnancyId], references: [id])
+
+  @@map("baby_records")
+}
+
+model Reminder {
+  id            String       @id @default(uuid())
+  pregnancyId   String
+  appointmentId String?
+  title         String
+  type          String
+  date          DateTime
+  completed     Boolean      @default(false)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+  pregnancy     Pregnancy    @relation(fields: [pregnancyId], references: [id])
+
+  @@map("reminders")
+}

@@ -22,8 +22,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const data = createPregnancySchema.parse(body);
 
+    if (!data.startDate) {
+      return NextResponse.json({ error: "Start date is required" }, { status: 400 });
+    }
+
     const pregnancyService = new PregnancyService();
-    const pregnancy = await pregnancyService.createPregnancy(user.id, data.startDate, data);
+    const pregnancy = await pregnancyService.createPregnancy(user.id, data.startDate, data as any);
 
     return NextResponse.json({ pregnancy });
   } catch (error) {

@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { apiFetch } from "@/lib/api";
 import { useAppTheme } from "@/components/providers/app-theme-provider";
 import { subWeeks, differenceInDays } from "date-fns";
+import { Button } from "@/components/ui/button";
 import {
   Baby, Sparkles, Check,
   ChevronRight, ChevronLeft, Calendar
@@ -47,26 +48,58 @@ export default function OnboardingPage() {
   const [direction, setDirection] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [invitations, setInvitations] = useState<any[]>([]);
 
   useEffect(() => {
     async function checkStatus() {
       try {
-        const res = await apiFetch("/api/dashboard");
-        if (res.ok) {
-          const summary = await res.json();
+        const [dashRes, notifRes] = await Promise.all([
+          apiFetch("/api/dashboard"),
+          apiFetch("/api/notifications"),
+        ]);
+
+        if (dashRes.ok) {
+          const summary = await dashRes.json();
           if (summary?.pregnancy?.onboardingDone) {
             router.replace("/dashboard");
             return;
           }
         }
+
+        if (notifRes.ok) {
+          const notifData = await notifRes.json();
+          setInvitations(notifData.invitations || []);
+        }
       } catch (err) {
-        console.error("Error checking onboarding status:", err);
+        console.error("Error checking status:", err);
       } finally {
         setIsLoading(false);
       }
     }
     checkStatus();
   }, [router]);
+
+  async function handleAcceptInvitation(invId: string) {
+    try {
+      setIsSubmitting(true);
+      const res = await apiFetch("/api/pregnancy/invite/respond", {
+        method: "POST",
+        body: JSON.stringify({ invitationId: invId, action: "ACEITAR" }),
+      });
+      if (res.ok) {
+        router.replace("/dashboard");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  function handleRejectInvitation(invId: string) {
+    setInvitations((prev) => prev.filter((i) => i.id !== invId));
+    // After rejecting, we just stay in onboarding
+  }
 
   const [data, setData] = useState<OnboardingData>({
     parentRole: null,
@@ -217,18 +250,49 @@ export default function OnboardingPage() {
           >
             {step === 0 && (
               <StepWrapper>
-                <div className="text-center space-y-4">
-                  <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mx-auto border border-slate-100">
-                    <Baby className="w-12 h-12 text-[#8b7355]" />
+                {invitations.length > 0 ? (
+                  <div className="text-center space-y-6">
+                    <div className="w-24 h-24 bg-primary/10 rounded-[2rem] flex items-center justify-center mx-auto">
+                      <Baby className="w-12 h-12 text-primary" />
+                    </div>
+                    <div className="space-y-2">
+                      <h1 className="text-3xl font-black text-foreground">Você recebeu um convite! 💌</h1>
+                      <p className="text-muted-foreground font-medium">
+                        <span className="font-bold text-slate-800">{invitations[0].invitedBy.name}</span> convidou você para acompanharem a gestação juntos.
+                      </p>
+                    </div>
+
+                    <div className="grid gap-3 pt-4">
+                      <Button
+                        onClick={() => handleAcceptInvitation(invitations[0].id)}
+                        disabled={isSubmitting}
+                        className="h-14 rounded-2xl bg-primary text-white font-bold text-lg shadow-xl shadow-primary/20 active:scale-95"
+                      >
+                        {isSubmitting ? "Aceitando..." : "Aceitar Convite e Começar ✨"}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={() => handleRejectInvitation(invitations[0].id)}
+                        className="h-14 rounded-2xl text-muted-foreground font-bold hover:bg-slate-100"
+                      >
+                        Agora não, quero criar minha própria conta
+                      </Button>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <h1 className="text-3xl font-black text-foreground">Que notícia incrível! 🎉</h1>
-                    <p className="text-muted-foreground text-lg leading-relaxed">
-                      Vamos preparar tudo para acompanhar essa jornada especial juntos.
-                    </p>
-                    <p className="text-muted-foreground text-sm">Vai levar menos de 2 minutos ⏱️</p>
+                ) : (
+                  <div className="text-center space-y-4">
+                    <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mx-auto border border-slate-100">
+                      <Baby className="w-12 h-12 text-[#8b7355]" />
+                    </div>
+                    <div className="space-y-2">
+                      <h1 className="text-3xl font-black text-foreground">Que notícia incrível! 🎉</h1>
+                      <p className="text-muted-foreground font-medium">Estamos muito felizes em te acompanhar nessa jornada mágica de nove meses.</p>
+                    </div>
+                    <Button onClick={goNext} className="mt-8 bg-[#8b7355] hover:bg-[#766148] text-white rounded-2xl h-14 px-8 font-bold text-lg shadow-xl shadow-primary/20 active:scale-95 w-full">
+                      Vamos começar! 🚀
+                    </Button>
                   </div>
-                </div>
+                )}
               </StepWrapper>
             )}
 

@@ -36,6 +36,12 @@ export function NotificationsPopover() {
   }, []);
 
   async function handleRespond(invitationId: string, action: "ACEITAR" | "RECUSAR") {
+    if (action === "ACEITAR") {
+      setOpen(false);
+      window.location.href = "/onboarding";
+      return;
+    }
+
     try {
       const res = await apiFetch("/api/pregnancy/invite/respond", {
         method: "POST",
@@ -44,9 +50,6 @@ export function NotificationsPopover() {
 
       if (res.ok) {
         setInvitations((prev) => prev.filter((i) => i.id !== invitationId));
-        if (action === "ACEITAR") {
-          window.location.reload(); // Reload to update dashboard context
-        }
       }
     } catch (err) {
       console.error("Error responding to invitation:", err);

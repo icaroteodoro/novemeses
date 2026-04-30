@@ -49,6 +49,7 @@ export default function OnboardingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [invitations, setInvitations] = useState<any[]>([]);
+  const [isJoining, setIsJoining] = useState(false);
 
   useEffect(() => {
     async function checkStatus() {
@@ -79,14 +80,15 @@ export default function OnboardingPage() {
     checkStatus();
   }, [router]);
 
-  async function handleAcceptInvitation(invId: string) {
+  async function handleAcceptInvitation(invId: string, role: string) {
     try {
       setIsSubmitting(true);
       const res = await apiFetch("/api/pregnancy/invite/respond", {
         method: "POST",
-        body: JSON.stringify({ invitationId: invId, action: "ACEITAR" }),
+        body: JSON.stringify({ invitationId: invId, action: "ACEITAR", role }),
       });
       if (res.ok) {
+        setTheme("SURPRESA", role as ParentRole);
         router.replace("/dashboard");
       }
     } catch (err) {
@@ -264,11 +266,14 @@ export default function OnboardingPage() {
 
                     <div className="grid gap-3 pt-4">
                       <Button
-                        onClick={() => handleAcceptInvitation(invitations[0].id)}
+                        onClick={() => {
+                          setIsJoining(true);
+                          goNext();
+                        }}
                         disabled={isSubmitting}
                         className="h-14 rounded-2xl bg-primary text-white font-bold text-lg shadow-xl shadow-primary/20 active:scale-95"
                       >
-                        {isSubmitting ? "Aceitando..." : "Aceitar Convite e Começar ✨"}
+                        Aceitar Convite e Começar ✨
                       </Button>
                       <Button
                         variant="ghost"
@@ -498,11 +503,17 @@ export default function OnboardingPage() {
 
         {step < STEP_COUNT - 1 && (
           <button
-            onClick={goNext}
-            disabled={!canProceed()}
+            onClick={() => {
+              if (isJoining && step === 1) {
+                handleAcceptInvitation(invitations[0].id, data.parentRole!);
+              } else {
+                goNext();
+              }
+            }}
+            disabled={!canProceed() || isSubmitting}
             className={`flex-1 flex items-center justify-center gap-2 h-14 rounded-2xl text-white font-bold text-lg transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${accentClass}`}
           >
-            {step === 0 ? "Começar!" : "Próximo"}
+            {isJoining && step === 1 ? (isSubmitting ? "Aceitando..." : "Aceitar e Começar! ✨") : (step === 0 ? "Começar!" : "Próximo")}
             <ChevronRight className="w-5 h-5" />
           </button>
         )}

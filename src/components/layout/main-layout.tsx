@@ -5,9 +5,10 @@ import { Sidebar } from "./sidebar";
 import { useAuthStore } from "@/modules/auth/auth.store";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { LogOut, Bell, Menu } from "lucide-react";
+import { LogOut, Menu } from "lucide-react";
 import { auth } from "@/infra/auth/firebase.config";
 import Link from "next/link";
+import { NotificationsPopover } from "../notifications/notifications-popover";
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const { user } = useAuthStore();
@@ -42,10 +43,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-2 md:gap-4">
-            <Button variant="ghost" size="icon" className="relative active:scale-95">
-              <Bell className="w-5 h-5 text-muted-foreground" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full animate-pulse" />
-            </Button>
+            <NotificationsPopover />
 
             <div className="flex items-center gap-2 md:gap-3 pl-3 md:pl-4 border-l">
               <div className="text-right hidden sm:block">

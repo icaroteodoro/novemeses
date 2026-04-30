@@ -8,40 +8,59 @@ datasource db {
 }
 
 model User {
-  id          String      @id @default(uuid())
-  firebaseUid String      @unique
-  email       String      @unique
-  name        String?
-  avatarUrl   String?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  pregnancies Pregnancy[]
+  id                 String                @id @default(uuid())
+  firebaseUid        String                @unique
+  email              String                @unique
+  name               String?
+  avatarUrl          String?
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  pregnancies        Pregnancy[]           @relation("OwnerPregnancies")
+  partnerPregnancies Pregnancy[]           @relation("PartnerPregnancies")
+  sentInvitations    PregnancyInvitation[] @relation("SentInvitations")
 
   @@map("users")
 }
 
 model Pregnancy {
-  id             String        @id @default(uuid())
-  userId         String        @unique
+  id             String                @id @default(uuid())
+  userId         String
+  partnerId      String?
   startDate      DateTime
   dueDate        DateTime?
   currentWeek    Int?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
   babyName       String?
   babyNameBoy    String?
   babyNameGirl   String?
-  babyGender     String?       @default("SURPRESA")
-  parentRole     String?       @default("MAE")
-  onboardingDone Boolean       @default(false)
+  babyGender     String?               @default("SURPRESA")
+  parentRole     String?               @default("MAE")
+  onboardingDone Boolean               @default(false)
   appointments   Appointment[]
   babyRecords    BabyRecord[]
   documents      Document[]
-  user           User          @relation(fields: [userId], references: [id])
+  user           User                  @relation("OwnerPregnancies", fields: [userId], references: [id])
+  partner        User?                 @relation("PartnerPregnancies", fields: [partnerId], references: [id])
   questions      Question[]
   reminders      Reminder[]
+  invitations    PregnancyInvitation[]
 
   @@map("pregnancies")
+}
+
+model PregnancyInvitation {
+  id          String    @id @default(uuid())
+  pregnancyId String
+  email       String
+  status      String    @default("PENDENTE") // PENDENTE, ACEITO, RECUSADO
+  invitedById String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  pregnancy   Pregnancy @relation(fields: [pregnancyId], references: [id])
+  invitedBy   User      @relation("SentInvitations", fields: [invitedById], references: [id])
+
+  @@map("pregnancy_invitations")
 }
 
 model Document {

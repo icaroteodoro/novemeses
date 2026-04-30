@@ -20,7 +20,7 @@ const ThemeContext = createContext<ThemeContextValue>({
 const THEME_VARS: Record<BabyGender, { primary: string; shadow: string; ring: string }> = {
   MENINO: { primary: "#2563eb", shadow: "37, 99, 235", ring: "#2563eb" },
   MENINA: { primary: "#ec4899", shadow: "236, 72, 153", ring: "#ec4899" },
-  SURPRESA: { primary: "#dcc7a1", shadow: "220, 199, 161", ring: "#dcc7a1" },
+  SURPRESA: { primary: "#8b7355", shadow: "139, 115, 85", ring: "#8b7355" },
 };
 
 export function AppThemeProvider({ children }: { children: React.ReactNode }) {

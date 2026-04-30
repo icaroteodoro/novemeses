@@ -27,7 +27,7 @@ export class PregnancyService {
       babyNameGirl: extra?.babyNameGirl,
       babyGender: extra?.babyGender ?? "SURPRESA",
       parentRole: extra?.parentRole ?? "MAE",
-      onboardingDone: extra?.onboardingDone ?? false,
+      onboardingDone: extra?.onboardingDone,
     });
   }
 

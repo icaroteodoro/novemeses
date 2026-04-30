@@ -27,6 +27,7 @@ import { apiFetch } from "@/lib/api";
 import { format, isAfter } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAppTheme } from "@/components/providers/app-theme-provider";
+import { PartnerInviteCard } from "@/components/pregnancy/partner-invite-card";
 
 const BABY_SIZE_BY_WEEK: Record<number, string> = {
    4: "semente de papoula", 5: "semente de gergelim", 6: "lentilha",
@@ -221,6 +222,11 @@ export default function DashboardPage() {
                   )}
                </CardContent>
             </Card>
+
+            {/* Invite Card */}
+            {!pregnancy.partnerId && pregnancy.userId === data.user.id && (
+               <PartnerInviteCard hasPartner={!!pregnancy.partnerId} />
+            )}
 
             {/* Stats Row */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

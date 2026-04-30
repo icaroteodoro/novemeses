@@ -287,7 +287,7 @@ export default function SettingsPage() {
                               if (g === "MENINA" && babyNameGirl) setBabyName(babyNameGirl);
                             }}
                             className={`flex-1 py-3 rounded-xl font-bold transition-all border-2 ${babyGender === g
-                              ? (g === 'MENINO' ? 'bg-blue-50 border-blue-500 text-blue-700' : g === 'MENINA' ? 'bg-pink-50 border-pink-500 text-pink-700' : 'bg-stone-50 border-[#dcc7a1] text-stone-800')
+                              ? (g === 'MENINO' ? 'bg-blue-50 border-blue-500 text-blue-700' : g === 'MENINA' ? 'bg-pink-50 border-pink-500 text-pink-700' : 'bg-[#8b7355]/5 border-[#8b7355] text-[#8b7355]')
                               : 'border-slate-100 text-muted-foreground'
                               }`}
                           >

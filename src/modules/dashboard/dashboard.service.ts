@@ -3,6 +3,7 @@ import { AppointmentService } from "@/modules/appointments/appointment.service";
 import { ReminderService } from "@/modules/reminders/reminder.service";
 import { QuestionService } from "@/modules/questions/question.service";
 import { BabyRecordService } from "@/modules/baby/baby-record.service";
+import { UserRepository } from "@/modules/users/user.repository";
 
 export class DashboardService {
   private pregnancyService: PregnancyService;
@@ -10,6 +11,7 @@ export class DashboardService {
   private reminderService: ReminderService;
   private questionService: QuestionService;
   private babyRecordService: BabyRecordService;
+  private userRepository: UserRepository;
 
   constructor() {
     this.pregnancyService = new PregnancyService();
@@ -17,10 +19,14 @@ export class DashboardService {
     this.reminderService = new ReminderService();
     this.questionService = new QuestionService();
     this.babyRecordService = new BabyRecordService();
+    this.userRepository = new UserRepository();
   }
 
   async getSummary(userId: string) {
-    const pregnancy = await this.pregnancyService.getActivePregnancy(userId);
+    const [pregnancy, user] = await Promise.all([
+      this.pregnancyService.getActivePregnancy(userId),
+      this.userRepository.findById(userId),
+    ]);
 
     if (!pregnancy) {
       return { hasActivePregnancy: false };
@@ -42,6 +48,7 @@ export class DashboardService {
     return {
       hasActivePregnancy: true,
       pregnancy,
+      user,
       summary: {
         nextAppointment,
         pendingRemindersCount: pendingReminders.length,

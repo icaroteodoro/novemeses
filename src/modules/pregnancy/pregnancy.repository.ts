@@ -11,6 +11,7 @@ export class PregnancyRepository {
     babyGender?: string;
     parentRole?: string;
     onboardingDone?: boolean;
+    partnerId?: string;
   }) {
     const existing = await this.findByUserId(data.userId);
     
@@ -26,6 +27,7 @@ export class PregnancyRepository {
           babyGender: data.babyGender,
           parentRole: data.parentRole,
           onboardingDone: data.onboardingDone,
+          partnerId: data.partnerId,
         },
       });
     }
@@ -37,7 +39,12 @@ export class PregnancyRepository {
 
   async findByUserId(userId: string) {
     return prisma.pregnancy.findFirst({
-      where: { userId },
+      where: {
+        OR: [
+          { userId },
+          { partnerId: userId }
+        ]
+      },
       orderBy: { createdAt: "desc" },
     });
   }
@@ -51,6 +58,7 @@ export class PregnancyRepository {
     babyGender?: string;
     parentRole?: string;
     onboardingDone?: boolean;
+    partnerId?: string;
   }) {
     return prisma.pregnancy.update({
       where: { id },

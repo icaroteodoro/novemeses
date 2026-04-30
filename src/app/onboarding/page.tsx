@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiFetch } from "@/lib/api";
@@ -46,6 +46,27 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function checkStatus() {
+      try {
+        const res = await apiFetch("/api/dashboard");
+        if (res.ok) {
+          const summary = await res.json();
+          if (summary?.pregnancy?.onboardingDone) {
+            router.replace("/dashboard");
+            return;
+          }
+        }
+      } catch (err) {
+        console.error("Error checking onboarding status:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    checkStatus();
+  }, [router]);
 
   const [data, setData] = useState<OnboardingData>({
     parentRole: null,
@@ -137,14 +158,14 @@ export default function OnboardingPage() {
       ? "bg-blue-500 hover:bg-blue-600"
       : data.babyGender === "MENINA"
         ? "bg-pink-500 hover:bg-pink-600"
-        : "bg-[#dcc7a1] hover:bg-[#d4b483] text-stone-800";
+        : "bg-[#8b7355] hover:bg-[#766148] text-white";
 
   const rangeAccentClass =
     data.babyGender === "MENINO"
       ? "[&::-webkit-slider-thumb]:bg-blue-600"
       : data.babyGender === "MENINA"
         ? "[&::-webkit-slider-thumb]:bg-pink-600"
-        : "[&::-webkit-slider-thumb]:bg-[#dcc7a1]";
+        : "[&::-webkit-slider-thumb]:bg-[#8b7355]";
 
   const getDUMProgress = () => {
     if (!data.dumDate) return null;
@@ -155,6 +176,14 @@ export default function OnboardingPage() {
   };
 
   const dumProgress = getDUMProgress();
+
+  if (isLoading) {
+    return (
+      <div className={`min-h-screen bg-gradient-to-br ${themeBg} flex flex-col items-center justify-center p-6`}>
+        <div className="w-10 h-10 border-4 border-[#8b7355] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen bg-gradient-to-br ${themeBg} flex flex-col items-center justify-center p-6 transition-all duration-700`}>
@@ -190,7 +219,7 @@ export default function OnboardingPage() {
               <StepWrapper>
                 <div className="text-center space-y-4">
                   <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mx-auto border border-slate-100">
-                    <Baby className="w-12 h-12 text-[#dcc7a1]" />
+                    <Baby className="w-12 h-12 text-[#8b7355]" />
                   </div>
                   <div className="space-y-2">
                     <h1 className="text-3xl font-black text-foreground">Que notícia incrível! 🎉</h1>
@@ -324,7 +353,7 @@ export default function OnboardingPage() {
                     label="Ainda não sei 🌟"
                     selected={data.knowsGender === "NAO"}
                     onClick={() => update({ knowsGender: "NAO", babyGender: "SURPRESA" })}
-                    color="border-[#eaddca] bg-[#f5f0e6] text-[#8b7355]"
+                    color="border-[#8b7355] bg-[#8b7355]/5 text-[#8b7355]"
                   />
                 </div>
               </StepWrapper>

@@ -6,6 +6,7 @@ import { z } from "zod";
 const respondSchema = z.object({
   invitationId: z.string(),
   action: z.enum(["ACEITAR", "RECUSAR"]),
+  role: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -14,12 +15,15 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { invitationId, action } = respondSchema.parse(body);
+    const { invitationId, action, role } = respondSchema.parse(body);
 
     const invitationService = new InvitationService();
     
     if (action === "ACEITAR") {
-      await invitationService.acceptInvitation(invitationId, user.id);
+      if (!role) {
+        return NextResponse.json({ error: "O papel (papai/mamãe) é obrigatório para aceitar o convite" }, { status: 400 });
+      }
+      await invitationService.acceptInvitation(invitationId, user.id, role);
     } else {
       await invitationService.rejectInvitation(invitationId);
     }

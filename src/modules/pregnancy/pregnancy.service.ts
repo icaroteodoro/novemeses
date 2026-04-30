@@ -16,6 +16,7 @@ export class PregnancyService {
     babyGender?: string;
     parentRole?: string;
     onboardingDone?: boolean;
+    partnerRole?: string;
   }) {
     const dueDate = extra?.dueDate ?? addDays(startDate, 280); // 40 weeks
     return this.pregnancyRepository.create({
@@ -27,6 +28,7 @@ export class PregnancyService {
       babyNameGirl: extra?.babyNameGirl,
       babyGender: extra?.babyGender ?? "SURPRESA",
       parentRole: extra?.parentRole ?? "MAE",
+      partnerRole: extra?.partnerRole,
       onboardingDone: extra?.onboardingDone,
     });
   }
@@ -48,9 +50,9 @@ export class PregnancyService {
     const daysDiff = differenceInDays(new Date(), startDate);
     const weeks = Math.floor(daysDiff / 7);
     const days = daysDiff % 7;
-    return { 
-      weeks: weeks < 0 ? 0 : weeks, 
-      days: days < 0 ? 0 : days 
+    return {
+      weeks: weeks < 0 ? 0 : weeks,
+      days: days < 0 ? 0 : days
     };
   }
 
@@ -59,7 +61,14 @@ export class PregnancyService {
     if (!pregnancy) return null;
 
     const progress = this.calculateProgress(pregnancy.startDate);
-    
-    return { ...pregnancy, currentWeek: progress.weeks, currentDays: progress.days };
+
+    const userRole = pregnancy.userId === userId ? pregnancy.parentRole : pregnancy.partnerRole;
+
+    return {
+      ...pregnancy,
+      currentWeek: progress.weeks,
+      currentDays: progress.days,
+      userRole
+    };
   }
 }

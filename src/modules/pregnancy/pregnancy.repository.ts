@@ -12,9 +12,10 @@ export class PregnancyRepository {
     parentRole?: string;
     onboardingDone?: boolean;
     partnerId?: string;
+    partnerRole?: string;
   }) {
     const existing = await this.findByUserId(data.userId);
-    
+
     if (existing) {
       return prisma.pregnancy.update({
         where: { id: existing.id },
@@ -28,6 +29,7 @@ export class PregnancyRepository {
           parentRole: data.parentRole,
           onboardingDone: data.onboardingDone,
           partnerId: data.partnerId,
+          partnerRole: data.partnerRole,
         },
       });
     }
@@ -59,6 +61,7 @@ export class PregnancyRepository {
     parentRole?: string;
     onboardingDone?: boolean;
     partnerId?: string;
+    partnerRole?: string;
   }) {
     return prisma.pregnancy.update({
       where: { id },

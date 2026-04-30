@@ -36,6 +36,7 @@ model Pregnancy {
   babyNameGirl   String?
   babyGender     String?               @default("SURPRESA")
   parentRole     String?               @default("MAE")
+  partnerRole    String?
   onboardingDone Boolean               @default(false)
   appointments   Appointment[]
   babyRecords    BabyRecord[]

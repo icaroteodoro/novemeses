@@ -27,6 +27,10 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Apenas o administrador da gestação pode convidar parceiros" }, { status: 403 });
     }
 
+    if (pregnancy.partnerId) {
+      return NextResponse.json({ error: "Esta gestação já possui um parceiro vinculado" }, { status: 400 });
+    }
+
     const invitationService = new InvitationService();
     const invitation = await invitationService.sendInvitation(pregnancy.id, email, user.id);
 

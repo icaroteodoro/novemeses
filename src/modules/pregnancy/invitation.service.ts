@@ -26,15 +26,20 @@ export class InvitationService {
     return this.invitationRepository.findPendingByEmail(email);
   }
 
-  async acceptInvitation(invitationId: string, userId: string) {
+  async acceptInvitation(invitationId: string, userId: string, role: string) {
     const invitation = await this.invitationRepository.findById(invitationId);
     if (!invitation || invitation.status !== "PENDENTE") {
       throw new Error("Convite inválido ou já processado");
     }
 
-    // Update pregnancy with partnerId
+    if (invitation.pregnancy.partnerId) {
+      throw new Error("Esta gestação já possui um parceiro vinculado");
+    }
+
+    // Update pregnancy with partnerId and partnerRole
     await this.pregnancyRepository.update(invitation.pregnancyId, {
       partnerId: userId,
+      partnerRole: role,
     });
 
     // Update invitation status

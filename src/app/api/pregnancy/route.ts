@@ -53,13 +53,24 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "No pregnancy found" }, { status: 404 });
     }
 
+    // Detect if user is owner or partner
+    const isOwner = existing.userId === user.id;
+    
     // Filter out null/undefined values to avoid prisma errors on required fields
-    const updateData = Object.fromEntries(
+    const updateData: any = Object.fromEntries(
       Object.entries(data).filter(([_, v]) => v !== null && v !== undefined)
     );
 
+    // If role is provided, ensure it updates the correct field
+    if (data.parentRole) {
+        if (!isOwner) {
+            updateData.partnerRole = data.parentRole;
+            delete updateData.parentRole;
+        }
+    }
+
     console.log("Updating pregnancy for user:", user.id, "Data:", updateData);
-    const pregnancy = await pregnancyService.updatePregnancy(existing.id, updateData as any);
+    const pregnancy = await pregnancyService.updatePregnancy(existing.id, updateData);
     console.log("Updated pregnancy result:", pregnancy);
     return NextResponse.json({ pregnancy });
   } catch (error) {

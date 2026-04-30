@@ -52,18 +52,26 @@ export default function SettingsPage() {
       setUser(u);
       setName(u?.name || "");
 
-      const p = u?.pregnancies?.[0];
+      const p = (u?.pregnancies && u.pregnancies.length > 0) 
+                ? u.pregnancies[0] 
+                : (u?.partnerPregnancies && u.partnerPregnancies.length > 0) 
+                  ? u.partnerPregnancies[0] 
+                  : null;
+
       if (p) {
         setPregnancy(p);
         setBabyName(p.babyName || "");
         setBabyNameBoy(p.babyNameBoy || "");
         setBabyNameGirl(p.babyNameGirl || "");
         setBabyGender(p.babyGender || "SURPRESA");
-        setParentRole(p.parentRole || "MAE");
+        
+        // Determine the role of the current user in this pregnancy
+        const role = u.id === p.userId ? (p.parentRole || "MAE") : (p.partnerRole || "PAI");
+        setParentRole(role);
         setStartDate(p.startDate ? new Date(p.startDate).toISOString().split('T')[0] : "");
 
         // Sync theme with database state
-        setTheme(p.babyGender || "SURPRESA", p.parentRole || "MAE");
+        setTheme(p.babyGender || "SURPRESA", role);
       }
     } catch (error) {
       console.error(error);

@@ -20,6 +20,10 @@ export class UserRepository {
         pregnancies: {
           orderBy: { createdAt: "desc" },
           take: 1
+        },
+        partnerPregnancies: {
+          orderBy: { createdAt: "desc" },
+          take: 1
         }
       }
     });

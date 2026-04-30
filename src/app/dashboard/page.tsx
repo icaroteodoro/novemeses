@@ -60,8 +60,8 @@ export default function DashboardPage() {
             setData(summary);
 
             // Apply theme from pregnancy data
-            if (summary?.pregnancy?.babyGender && summary?.pregnancy?.parentRole) {
-               setTheme(summary.pregnancy.babyGender, summary.pregnancy.parentRole);
+            if (summary?.pregnancy?.babyGender && summary?.pregnancy?.userRole) {
+               setTheme(summary.pregnancy.babyGender, summary.pregnancy.userRole);
             }
 
             // Redirect to onboarding if not done
@@ -107,7 +107,7 @@ export default function DashboardPage() {
    const weeksLeft = Math.max(40 - currentWeek, 0);
    const babySize = BABY_SIZE_BY_WEEK[currentWeek];
 
-   const isMae = pregnancy.parentRole !== "PAI";
+   const isMae = pregnancy.userRole !== "PAI";
    const greeting = isMae ? "Olá, Mamãe! ✨" : "Olá, Papai! ✨";
    const babyLabel =
       pregnancy.babyGender === "MENINO" ? "menino" :
@@ -496,7 +496,7 @@ export default function DashboardPage() {
                                     });
 
                                     if (res.ok) {
-                                       setTheme(g.id as any, pregnancy.parentRole);
+                                       setTheme(g.id as any, pregnancy.userRole);
                                        setIsGenderModalOpen(false);
                                        // Refresh data to update dashboard
                                        const refreshRes = await apiFetch("/api/dashboard");

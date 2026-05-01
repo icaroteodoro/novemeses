@@ -333,6 +333,99 @@ export default function SettingsPage() {
               </CardContent>
             </Card>
 
+            <Card className="border-none shadow-sm bg-white rounded-[2.5rem] overflow-hidden">
+              <CardHeader className="p-8 border-b border-slate-50">
+                <div className="flex items-center gap-4">
+                  <div className="bg-primary/10 p-3 rounded-2xl text-primary">
+                    <UserIcon className="w-6 h-6" />
+                  </div>
+                  <CardTitle className="text-xl font-black">Pessoas Vinculadas</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="p-8">
+                <div className="space-y-4">
+                  {/* Dono */}
+                  <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-white border flex items-center justify-center overflow-hidden">
+                        {pregnancy?.user?.avatarUrl ? (
+                          <img src={pregnancy.user.avatarUrl} className="w-full h-full object-cover" />
+                        ) : (
+                          <UserIcon className="w-5 h-5 text-slate-300" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-bold text-foreground text-sm">{pregnancy?.user?.name || "Administrador"}</p>
+                        <p className="text-[10px] text-muted-foreground">{pregnancy?.user?.email}</p>
+                      </div>
+                    </div>
+                    <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase">
+                      Dono(a)
+                    </span>
+                  </div>
+
+                  {/* Parceiro */}
+                  {pregnancy?.partner ? (
+                    <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-white border flex items-center justify-center overflow-hidden">
+                          {pregnancy.partner.avatarUrl ? (
+                            <img src={pregnancy.partner.avatarUrl} className="w-full h-full object-cover" />
+                          ) : (
+                            <UserIcon className="w-5 h-5 text-slate-300" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-bold text-foreground text-sm">{pregnancy.partner.name || "Parceiro(a)"}</p>
+                          <p className="text-[10px] text-muted-foreground">{pregnancy.partner.email}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase">
+                          Parceiro(a)
+                        </span>
+                        {user?.id === pregnancy?.userId && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            type="button"
+                            onClick={async () => {
+                              if (confirm("Deseja remover o parceiro desta gestação?")) {
+                                try {
+                                  const res = await apiFetch("/api/pregnancy/partner", { method: "DELETE" });
+                                  if (res.ok) fetchData();
+                                } catch (error) {
+                                  console.error(error);
+                                }
+                              }
+                            }}
+                            className="text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg h-8 w-8 p-0"
+                          >
+                            <LogOut className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-6 border-2 border-dashed border-slate-100 rounded-3xl text-center space-y-3">
+                      <p className="text-muted-foreground text-xs">Nenhum parceiro vinculado.</p>
+                      {user?.id === pregnancy?.userId && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          type="button"
+                          onClick={() => router.push("/onboarding?tab=partner")}
+                          className="rounded-xl border-primary text-primary hover:bg-primary/5 text-xs font-bold"
+                        >
+                          Convidar Parceiro
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Sair */}
             <div className="pt-8 flex justify-center">
               <Button

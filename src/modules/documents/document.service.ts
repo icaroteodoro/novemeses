@@ -20,16 +20,27 @@ export class DocumentService {
     const filePath = `documents/${data.pregnancyId}/${Date.now()}-${data.name}`;
     const url = await this.storageService.uploadFile(filePath, data.file, data.type);
 
-    return this.documentRepository.create({
+    const doc = await this.documentRepository.create({
       pregnancyId: data.pregnancyId,
       name: data.name,
       url,
       category: data.category,
       type: data.type,
     });
+
+    return {
+      ...doc,
+      url: await this.storageService.getSignedUrl(doc.url),
+    };
   }
 
   async getDocumentsByPregnancy(pregnancyId: string) {
-    return this.documentRepository.findByPregnancyId(pregnancyId);
+    const docs = await this.documentRepository.findByPregnancyId(pregnancyId);
+    
+    // Generate signed URLs for each document
+    return Promise.all(docs.map(async (doc) => ({
+      ...doc,
+      url: await this.storageService.getSignedUrl(doc.url),
+    })));
   }
 }

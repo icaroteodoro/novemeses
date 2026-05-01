@@ -22,6 +22,10 @@ export class InvitationService {
     return this.invitationRepository.findPendingByEmail(email);
   }
 
+  async getPendingInvitationByPregnancy(pregnancyId: string, email: string) {
+    return this.invitationRepository.findPendingByPregnancyAndEmail(pregnancyId, email);
+  }
+
   async acceptInvitation(invitationId: string, userId: string, userEmail: string, role: string) {
     const invitation = await this.invitationRepository.findById(invitationId);
     if (!invitation || invitation.status !== "PENDENTE") {

@@ -19,11 +19,19 @@ export class UserRepository {
       include: {
         pregnancies: {
           orderBy: { createdAt: "desc" },
-          take: 1
+          take: 1,
+          include: {
+            user: { select: { id: true, name: true, email: true, avatarUrl: true } },
+            partner: { select: { id: true, name: true, email: true, avatarUrl: true } }
+          }
         },
         partnerPregnancies: {
           orderBy: { createdAt: "desc" },
-          take: 1
+          take: 1,
+          include: {
+            user: { select: { id: true, name: true, email: true, avatarUrl: true } },
+            partner: { select: { id: true, name: true, email: true, avatarUrl: true } }
+          }
         }
       }
     });
@@ -33,6 +41,24 @@ export class UserRepository {
     return prisma.user.update({
       where: { id },
       data,
+      include: {
+        pregnancies: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          include: {
+            user: { select: { id: true, name: true, email: true, avatarUrl: true } },
+            partner: { select: { id: true, name: true, email: true, avatarUrl: true } }
+          }
+        },
+        partnerPregnancies: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          include: {
+            user: { select: { id: true, name: true, email: true, avatarUrl: true } },
+            partner: { select: { id: true, name: true, email: true, avatarUrl: true } }
+          }
+        }
+      }
     });
   }
 

@@ -23,7 +23,17 @@ export async function POST(request: NextRequest) {
     const data = createPregnancySchema.parse(body);
 
     if (!data.startDate) {
-      return NextResponse.json({ error: "Start date is required" }, { status: 400 });
+      return NextResponse.json({ error: "A data de início é obrigatória" }, { status: 400 });
+    }
+
+    // VUL-23: Date validation
+    const now = new Date();
+    if (data.startDate > now) {
+      return NextResponse.json({ error: "A data de início não pode ser no futuro" }, { status: 400 });
+    }
+
+    if (data.dueDate && data.dueDate < data.startDate) {
+      return NextResponse.json({ error: "A data prevista não pode ser anterior à data de início" }, { status: 400 });
     }
 
     const pregnancyService = new PregnancyService();

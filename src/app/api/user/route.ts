@@ -21,6 +21,8 @@ export async function GET(request: NextRequest) {
       name: userData?.name,
       email: userData?.email,
       avatarUrl: userData?.avatarUrl,
+      pregnancies: userData?.pregnancies,
+      partnerPregnancies: userData?.partnerPregnancies,
     },
   });
 }
@@ -42,6 +44,8 @@ export async function PATCH(request: NextRequest) {
         name: updatedUser.name,
         email: updatedUser.email,
         avatarUrl: updatedUser.avatarUrl,
+        pregnancies: (updatedUser as any).pregnancies,
+        partnerPregnancies: (updatedUser as any).partnerPregnancies,
       },
     });
   } catch (error) {

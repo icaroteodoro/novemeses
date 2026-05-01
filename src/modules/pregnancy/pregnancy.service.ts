@@ -42,6 +42,8 @@ export class PregnancyService {
     babyGender?: string;
     parentRole?: string;
     onboardingDone?: boolean;
+    partnerId?: string | null;
+    partnerRole?: string | null;
   }) {
     return this.pregnancyRepository.update(id, data);
   }

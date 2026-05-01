@@ -32,6 +32,13 @@ export async function POST(request: NextRequest) {
     }
 
     const invitationService = new InvitationService();
+    
+    // VUL-22: Prevent duplicate invitations
+    const existingInvitation = await invitationService.getPendingInvitationByPregnancy(pregnancy.id, email);
+    if (existingInvitation) {
+      return NextResponse.json({ error: "Já existe um convite pendente para este e-mail" }, { status: 400 });
+    }
+
     const invitation = await invitationService.sendInvitation(pregnancy.id, email, user.id);
 
     return NextResponse.json({ invitation });

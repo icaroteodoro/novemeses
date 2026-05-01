@@ -22,6 +22,25 @@ export class StorageService {
     return publicUrl;
   }
 
+  async getSignedUrl(publicUrl: string): Promise<string> {
+    // Extract the storage path from the public URL
+    const marker = `/object/public/${this.bucket}/`;
+    const idx = publicUrl.indexOf(marker);
+    if (idx === -1) return publicUrl; // Fallback to public if format unexpected
+    const filePath = decodeURIComponent(publicUrl.slice(idx + marker.length));
+
+    const { data, error } = await supabase.storage
+      .from(this.bucket)
+      .createSignedUrl(filePath, 60 * 15); // 15 minutes
+
+    if (error) {
+      console.error(`Error generating signed URL: ${error.message}`);
+      return publicUrl; // Fallback
+    }
+
+    return data.signedUrl;
+  }
+
   async deleteFile(publicUrl: string): Promise<void> {
     // Extract the storage path from the public URL
     // URL format: https://<project>.supabase.co/storage/v1/object/public/<bucket>/<path>

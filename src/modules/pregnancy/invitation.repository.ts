@@ -40,10 +40,29 @@ export class InvitationRepository {
     });
   }
 
+  async findPendingByPregnancyAndEmail(pregnancyId: string, email: string) {
+    return prisma.pregnancyInvitation.findFirst({
+      where: {
+        pregnancyId,
+        email,
+        status: "PENDENTE",
+      },
+    });
+  }
+
   async updateStatus(id: string, status: "ACEITO" | "RECUSADO") {
-    return prisma.pregnancyInvitation.update({
-      where: { id },
+    const { count } = await prisma.pregnancyInvitation.updateMany({
+      where: { 
+        id,
+        status: "PENDENTE"
+      },
       data: { status },
     });
+
+    if (count === 0) {
+      throw new Error("Convite já processado ou inexistente");
+    }
+
+    return { success: true };
   }
 }

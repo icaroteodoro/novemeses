@@ -56,6 +56,7 @@ export class DashboardService {
         babyName: pregnancy.babyName,
         babyGender: pregnancy.babyGender,
         userRole: (pregnancy as any).userRole,
+        onboardingDone: pregnancy.onboardingDone,
       },
       user: {
         id: user?.id,

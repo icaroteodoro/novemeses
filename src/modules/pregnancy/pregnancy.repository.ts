@@ -60,8 +60,8 @@ export class PregnancyRepository {
     babyGender?: string;
     parentRole?: string;
     onboardingDone?: boolean;
-    partnerId?: string;
-    partnerRole?: string;
+    partnerId?: string | null;
+    partnerRole?: string | null;
   }) {
     return prisma.pregnancy.update({
       where: { id },

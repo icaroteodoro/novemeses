@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest } from "@/modules/auth/auth.utils";
 import { DocumentRepository } from "@/modules/documents/document.repository";
 import { StorageService } from "@/infra/storage/storage.service";
+import { PregnancyService } from "@/modules/pregnancy/pregnancy.service";
 
 const documentRepository = new DocumentRepository();
 const storageService = new StorageService();
@@ -25,6 +26,13 @@ export async function PATCH(
     const doc = await documentRepository.findById(id);
     if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+    // Verify ownership — document must belong to the user's active pregnancy
+    const pregnancyService = new PregnancyService();
+    const pregnancy = await pregnancyService.getActivePregnancy(user.id);
+    if (!pregnancy || doc.pregnancyId !== pregnancy.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const updated = await documentRepository.updateName(id, name.trim());
     return NextResponse.json({ document: updated });
   } catch (error) {
@@ -46,6 +54,13 @@ export async function DELETE(
   try {
     const doc = await documentRepository.findById(id);
     if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+    // Verify ownership before deleting
+    const pregnancyService = new PregnancyService();
+    const pregnancy = await pregnancyService.getActivePregnancy(user.id);
+    if (!pregnancy || doc.pregnancyId !== pregnancy.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     // Delete from Supabase Storage first
     await storageService.deleteFile(doc.url);

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest } from "@/modules/auth/auth.utils";
 import { AppointmentService } from "@/modules/appointments/appointment.service";
+import { PregnancyService } from "@/modules/pregnancy/pregnancy.service";
 import { z } from "zod";
 
 const updateAppointmentSchema = z.object({
@@ -27,6 +28,13 @@ export async function GET(
       return NextResponse.json({ error: "Appointment not found" }, { status: 404 });
     }
 
+    // Verify ownership — appointment must belong to the user's active pregnancy
+    const pregnancyService = new PregnancyService();
+    const pregnancy = await pregnancyService.getActivePregnancy(user.id);
+    if (!pregnancy || appointment.pregnancyId !== pregnancy.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     return NextResponse.json({ appointment });
   } catch (error) {
     console.error("Error getting appointment:", error);
@@ -48,9 +56,22 @@ export async function PATCH(
     const data = updateAppointmentSchema.parse(body);
 
     const appointmentService = new AppointmentService();
-    const appointment = await appointmentService.updateAppointment(id, data);
+    const appointment = await appointmentService.getAppointmentById(id);
 
-    return NextResponse.json({ appointment });
+    if (!appointment) {
+      return NextResponse.json({ error: "Appointment not found" }, { status: 404 });
+    }
+
+    // Verify ownership before updating
+    const pregnancyService = new PregnancyService();
+    const pregnancy = await pregnancyService.getActivePregnancy(user.id);
+    if (!pregnancy || appointment.pregnancyId !== pregnancy.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const updated = await appointmentService.updateAppointment(id, data);
+
+    return NextResponse.json({ appointment: updated });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.message }, { status: 400 });
@@ -71,6 +92,19 @@ export async function DELETE(
 
   try {
     const appointmentService = new AppointmentService();
+    const appointment = await appointmentService.getAppointmentById(id);
+
+    if (!appointment) {
+      return NextResponse.json({ error: "Appointment not found" }, { status: 404 });
+    }
+
+    // Verify ownership before deleting
+    const pregnancyService = new PregnancyService();
+    const pregnancy = await pregnancyService.getActivePregnancy(user.id);
+    if (!pregnancy || appointment.pregnancyId !== pregnancy.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     await appointmentService.deleteAppointment(id);
 
     return NextResponse.json({ success: true });

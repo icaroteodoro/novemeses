@@ -11,10 +11,6 @@ export class InvitationService {
   }
 
   async sendInvitation(pregnancyId: string, email: string, invitedById: string) {
-    // Check if user already has a partner or is already invited
-    const pregnancy = await this.pregnancyRepository.update(pregnancyId, {}); // Just to check if it exists? Actually better to find it.
-    // In a real app, check if email is same as owner email, etc.
-    
     return this.invitationRepository.create({
       pregnancyId,
       email,
@@ -26,10 +22,15 @@ export class InvitationService {
     return this.invitationRepository.findPendingByEmail(email);
   }
 
-  async acceptInvitation(invitationId: string, userId: string, role: string) {
+  async acceptInvitation(invitationId: string, userId: string, userEmail: string, role: string) {
     const invitation = await this.invitationRepository.findById(invitationId);
     if (!invitation || invitation.status !== "PENDENTE") {
       throw new Error("Convite inválido ou já processado");
+    }
+
+    // Ensure only the intended recipient can accept the invitation
+    if (invitation.email !== userEmail) {
+      throw new Error("Este convite não pertence a você");
     }
 
     if (invitation.pregnancy.partnerId) {

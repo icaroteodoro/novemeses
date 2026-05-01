@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromRequest } from "@/modules/auth/auth.utils";
 import { ReminderService } from "@/modules/reminders/reminder.service";
+import { PregnancyService } from "@/modules/pregnancy/pregnancy.service";
 import { z } from "zod";
 
 const updateReminderSchema = z.object({
@@ -27,6 +28,13 @@ export async function GET(
       return NextResponse.json({ error: "Reminder not found" }, { status: 404 });
     }
 
+    // Verify ownership — reminder must belong to the user's active pregnancy
+    const pregnancyService = new PregnancyService();
+    const pregnancy = await pregnancyService.getActivePregnancy(user.id);
+    if (!pregnancy || reminder.pregnancyId !== pregnancy.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     return NextResponse.json({ reminder });
   } catch (error) {
     console.error("Error getting reminder:", error);
@@ -48,9 +56,22 @@ export async function PATCH(
     const data = updateReminderSchema.parse(body);
 
     const reminderService = new ReminderService();
-    const reminder = await reminderService.updateReminder(id, data);
+    const reminder = await reminderService.getReminderById(id);
 
-    return NextResponse.json({ reminder });
+    if (!reminder) {
+      return NextResponse.json({ error: "Reminder not found" }, { status: 404 });
+    }
+
+    // Verify ownership before updating
+    const pregnancyService = new PregnancyService();
+    const pregnancy = await pregnancyService.getActivePregnancy(user.id);
+    if (!pregnancy || reminder.pregnancyId !== pregnancy.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const updated = await reminderService.updateReminder(id, data);
+
+    return NextResponse.json({ reminder: updated });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.message }, { status: 400 });
@@ -71,6 +92,19 @@ export async function DELETE(
 
   try {
     const reminderService = new ReminderService();
+    const reminder = await reminderService.getReminderById(id);
+
+    if (!reminder) {
+      return NextResponse.json({ error: "Reminder not found" }, { status: 404 });
+    }
+
+    // Verify ownership before deleting
+    const pregnancyService = new PregnancyService();
+    const pregnancy = await pregnancyService.getActivePregnancy(user.id);
+    if (!pregnancy || reminder.pregnancyId !== pregnancy.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     await reminderService.deleteReminder(id);
 
     return NextResponse.json({ success: true });

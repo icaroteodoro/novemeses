@@ -69,9 +69,7 @@ export async function PATCH(request: NextRequest) {
         }
     }
 
-    console.log("Updating pregnancy for user:", user.id, "Data:", updateData);
     const pregnancy = await pregnancyService.updatePregnancy(existing.id, updateData);
-    console.log("Updated pregnancy result:", pregnancy);
     return NextResponse.json({ pregnancy });
   } catch (error) {
     if (error instanceof z.ZodError) {

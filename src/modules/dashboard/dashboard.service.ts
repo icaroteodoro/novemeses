@@ -47,8 +47,22 @@ export class DashboardService {
 
     return {
       hasActivePregnancy: true,
-      pregnancy,
-      user,
+      pregnancy: {
+        id: pregnancy.id,
+        startDate: pregnancy.startDate,
+        dueDate: pregnancy.dueDate,
+        currentWeek: pregnancy.currentWeek,
+        currentDays: (pregnancy as any).currentDays,
+        babyName: pregnancy.babyName,
+        babyGender: pregnancy.babyGender,
+        userRole: (pregnancy as any).userRole,
+      },
+      user: {
+        id: user?.id,
+        name: user?.name,
+        email: user?.email,
+        avatarUrl: user?.avatarUrl,
+      },
       summary: {
         nextAppointment,
         pendingRemindersCount: pendingReminders.length,

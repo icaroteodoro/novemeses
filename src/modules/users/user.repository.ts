@@ -35,4 +35,10 @@ export class UserRepository {
       data,
     });
   }
+
+  async delete(id: string) {
+    return prisma.user.delete({
+      where: { id },
+    });
+  }
 }

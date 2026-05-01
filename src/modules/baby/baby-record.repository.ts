@@ -14,6 +14,12 @@ export class BabyRecordRepository {
     });
   }
 
+  async findById(id: string) {
+    return prisma.babyRecord.findUnique({
+      where: { id },
+    });
+  }
+
   async delete(id: string) {
     return prisma.babyRecord.delete({
       where: { id },

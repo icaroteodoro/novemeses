@@ -16,7 +16,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const token = await user.getIdToken();
-        Cookies.set("token", token, { expires: 7 });
+        Cookies.set("token", token, { 
+          expires: 7,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "strict"
+        });
 
         // Sync user with backend
         try {

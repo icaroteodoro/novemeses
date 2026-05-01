@@ -24,4 +24,8 @@ export class UserService {
   async updateUser(id: string, data: { name?: string; avatarUrl?: string }) {
     return this.userRepository.update(id, data);
   }
+
+  async deleteUser(id: string) {
+    return this.userRepository.delete(id);
+  }
 }

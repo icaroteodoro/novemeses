@@ -13,6 +13,20 @@ export async function DELETE(
 
   try {
     const babyRecordService = new BabyRecordService();
+    const record = await babyRecordService.getRecordById(id);
+
+    if (!record) {
+      return NextResponse.json({ error: "Record not found" }, { status: 404 });
+    }
+
+    // VUL-12: Verify ownership
+    const { PregnancyService } = await import("@/modules/pregnancy/pregnancy.service");
+    const pregnancyService = new PregnancyService();
+    const pregnancy = await pregnancyService.getActivePregnancy(user.id);
+    if (!pregnancy || record.pregnancyId !== pregnancy.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     await babyRecordService.deleteRecord(id);
     return NextResponse.json({ success: true });
   } catch (error) {

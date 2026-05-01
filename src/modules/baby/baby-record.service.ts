@@ -24,4 +24,8 @@ export class BabyRecordService {
   async deleteRecord(id: string) {
     return this.babyRecordRepository.delete(id);
   }
+
+  async getRecordById(id: string) {
+    return this.babyRecordRepository.findById(id);
+  }
 }

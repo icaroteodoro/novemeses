@@ -62,8 +62,8 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Delete from Supabase Storage first
-    await storageService.deleteFile(doc.url);
+    // Delete all files from Storage first
+    await Promise.all((doc as any).files.map((f: any) => storageService.deleteFile(f.url)));
 
     // Then remove from database
     await documentRepository.delete(id);

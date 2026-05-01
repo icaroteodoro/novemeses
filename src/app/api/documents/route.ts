@@ -18,28 +18,28 @@ export async function POST(request: NextRequest) {
 
   try {
     const formData = await request.formData();
-    const file = formData.get("file") as File;
+    const files = formData.getAll("file") as File[];
     const category = formData.get("category") as string;
     const name = formData.get("name") as string;
 
-    if (!file || !category || !name) {
+    if (files.length === 0 || !category || !name) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
-    // Validate file type against server-side whitelist (do not trust client-provided MIME)
-    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
-      return NextResponse.json(
-        { error: "Tipo de arquivo não permitido. Envie PDF, JPEG, PNG, WebP ou GIF." },
-        { status: 400 }
-      );
-    }
-
-    // Enforce maximum file size
-    if (file.size > MAX_FILE_SIZE_BYTES) {
-      return NextResponse.json(
-        { error: "Arquivo muito grande. O tamanho máximo permitido é 10 MB." },
-        { status: 400 }
-      );
+    // Validate each file
+    for (const file of files) {
+      if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+        return NextResponse.json(
+          { error: `Arquivo "${file.name}" não permitido. Envie PDF, JPEG, PNG, WebP ou GIF.` },
+          { status: 400 }
+        );
+      }
+      if (file.size > MAX_FILE_SIZE_BYTES) {
+        return NextResponse.json(
+          { error: `Arquivo "${file.name}" muito grande (máximo 10 MB).` },
+          { status: 400 }
+        );
+      }
     }
 
     const pregnancyService = new PregnancyService();
@@ -49,14 +49,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No active pregnancy found" }, { status: 404 });
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
+    // Process all files
+    const documentFiles = await Promise.all(files.map(async (file) => ({
+      buffer: Buffer.from(await file.arrayBuffer()),
+      type: file.type,
+      originalName: file.name
+    })));
+
     const documentService = new DocumentService();
     const document = await documentService.uploadDocument({
       pregnancyId: pregnancy.id,
       name,
-      file: buffer,
       category,
-      type: file.type,
+      files: documentFiles
     });
 
     return NextResponse.json({ document });

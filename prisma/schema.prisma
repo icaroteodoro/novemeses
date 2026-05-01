@@ -65,17 +65,27 @@ model PregnancyInvitation {
 }
 
 model Document {
-  id          String    @id @default(uuid())
+  id          String         @id @default(uuid())
   pregnancyId String
   name        String
-  url         String
   category    String
-  type        String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  pregnancy   Pregnancy @relation(fields: [pregnancyId], references: [id], onDelete: Cascade)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  pregnancy   Pregnancy      @relation(fields: [pregnancyId], references: [id], onDelete: Cascade)
+  files       DocumentFile[]
 
   @@map("documents")
+}
+
+model DocumentFile {
+  id         String   @id @default(uuid())
+  documentId String
+  url        String
+  type       String
+  createdAt  DateTime @default(now())
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@map("document_files")
 }
 
 model Appointment {

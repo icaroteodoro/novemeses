@@ -6,18 +6,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { 
-  FileText, 
-  Upload, 
-  Search, 
-  FileImage, 
+import {
+  FileText,
+  Upload,
+  Search,
+  FileImage,
   File as FileIcon,
   Plus,
   X,
   ExternalLink,
   Pencil,
-  Trash2
+  Trash2,
+  ChevronRight,
+  ChevronLeft
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { apiFetch } from "@/lib/api";
 
 const DOC_TYPES = [
@@ -39,11 +42,12 @@ export default function DocumentsPage() {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [viewerState, setViewerState] = useState<{ doc: any; index: number } | null>(null);
 
   // Form states
   const [title, setTitle] = useState("");
   const [type, setType] = useState("ULTRA");
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
 
   const fetchDocuments = async () => {
     try {
@@ -67,12 +71,14 @@ export default function DocumentsPage() {
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file || !title) return;
+    if (files.length === 0 || !title) return;
 
     setIsUploading(true);
     setUploadError(null);
     const formData = new FormData();
-    formData.append("file", file);
+    files.forEach(f => {
+      formData.append("file", f);
+    });
     formData.append("name", title);
     formData.append("category", type);
 
@@ -86,7 +92,7 @@ export default function DocumentsPage() {
         await fetchDocuments();
         setShowUploadModal(false);
         setTitle("");
-        setFile(null);
+        setFiles([]);
       } else {
         const data = await res.json();
         if (res.status === 404) {
@@ -142,219 +148,245 @@ export default function DocumentsPage() {
 
   return (
     <>
-    <MainLayout>
-      <div className="space-y-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-3">
-              <FileText className="text-primary w-8 h-8" />
-              Central de Documentos
-            </h1>
-            <p className="text-muted-foreground">Armazene e organize seus exames e laudos.</p>
-          </div>
-          <Button 
-            onClick={() => setShowUploadModal(true)}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl shadow-primary/20 rounded-2xl h-12 px-8 font-bold flex gap-2"
-          >
-            <Plus className="w-5 h-5" />
-            Novo Documento
-          </Button>
-        </div>
-
-        {/* No pregnancy warning */}
-        {noPregnancy && (
-          <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 flex items-start md:items-center gap-4 flex-col md:flex-row">
-            <div className="bg-amber-100 p-3 rounded-xl flex-shrink-0">
-              <svg className="w-6 h-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
+      <MainLayout>
+        <div className="space-y-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+              <h1 className="text-3xl font-extrabold tracking-tight text-foreground flex items-center gap-3">
+                <FileText className="text-primary w-8 h-8" />
+                Central de Documentos
+              </h1>
+              <p className="text-muted-foreground">Armazene e organize seus exames e laudos.</p>
             </div>
-            <div className="flex-1">
-              <p className="font-bold text-amber-800">Gestação não configurada</p>
-              <p className="text-amber-700 text-sm mt-1">Para enviar documentos, primeiro cadastre sua gestação com a data da última menstruação.</p>
-            </div>
-            <a href="/modules/pregnancy" className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-6 rounded-xl transition-colors flex-shrink-0 text-sm">
-              Configurar agora →
-            </a>
+            <Button
+              onClick={() => setShowUploadModal(true)}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl shadow-primary/20 rounded-2xl h-12 px-8 font-bold flex gap-2"
+            >
+              <Plus className="w-5 h-5" />
+              Novo Documento
+            </Button>
           </div>
-        )}
 
-        {/* Search and Filters */}
-        <div className="flex gap-4 items-center bg-white p-2 rounded-2xl shadow-sm border">
-           <div className="relative flex-1">
+          {/* No pregnancy warning */}
+          {noPregnancy && (
+            <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 flex items-start md:items-center gap-4 flex-col md:flex-row">
+              <div className="bg-amber-100 p-3 rounded-xl flex-shrink-0">
+                <svg className="w-6 h-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-amber-800">Gestação não configurada</p>
+                <p className="text-amber-700 text-sm mt-1">Para enviar documentos, primeiro cadastre sua gestação com a data da última menstruação.</p>
+              </div>
+              <a href="/modules/pregnancy" className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-6 rounded-xl transition-colors flex-shrink-0 text-sm">
+                Configurar agora →
+              </a>
+            </div>
+          )}
+
+          {/* Search and Filters */}
+          <div className="flex gap-4 items-center bg-white p-2 rounded-2xl shadow-sm border">
+            <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input 
-                placeholder="Buscar por nome..." 
+              <Input
+                placeholder="Buscar por nome..."
                 className="border-none bg-transparent focus-visible:ring-0 pl-12 h-12 text-lg"
               />
-           </div>
+            </div>
+          </div>
+
+          {/* Documents List */}
+          {loading ? (
+            <div className="text-center py-20 text-primary font-medium animate-pulse">Carregando seus arquivos...</div>
+          ) : documents.length > 0 ? (
+            <div className="bg-white rounded-[1.5rem] border shadow-sm overflow-hidden">
+              {documents.map((doc, index) => {
+                return (
+                  <div
+                    key={doc.id}
+                    className={`flex flex-col gap-3 px-6 py-5 group hover:bg-slate-50 transition-colors ${index !== 0 ? "border-t" : ""}`}
+                  >
+                    <div className="flex items-center gap-4">
+                      {/* Primary Icon */}
+                      <div className="w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center overflow-hidden bg-primary/5 text-primary">
+                        <FileText className="w-6 h-6" />
+                      </div>
+
+                      {/* Name + date */}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-foreground truncate">{doc.name}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <p className="text-xs text-muted-foreground">{new Date(doc.createdAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}</p>
+                          <span className="text-[10px] text-slate-300">•</span>
+                          <p className="text-[10px] font-bold text-primary uppercase tracking-tight">{doc.files?.length || 0} {doc.files?.length === 1 ? "arquivo" : "arquivos"}</p>
+                        </div>
+                      </div>
+
+                      {/* Category badge */}
+                      <Badge variant="outline" className="hidden sm:flex text-[10px] uppercase tracking-widest font-bold border-primary/20 text-primary rounded-full flex-shrink-0">
+                        {DOC_TYPES.find(t => t.id === doc.category)?.label || doc.category}
+                      </Badge>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button variant="ghost" size="icon" title="Renomear" className="w-9 h-9 rounded-xl" onClick={() => { setEditingDoc({ id: doc.id, name: doc.name }); setEditName(doc.name); }}>
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" title="Excluir" className="w-9 h-9 rounded-xl text-red-400 hover:text-red-600 hover:bg-red-50" onClick={() => setDeleteConfirmId(doc.id)}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Files List */}
+                    <div className="ml-16 flex flex-wrap gap-2">
+                      {doc.files?.map((f: any, idx: number) => {
+                        const isImg = f.type?.startsWith("image/");
+                        return (
+                          <button
+                            key={f.id}
+                            onClick={() => setViewerState({ doc, index: idx })}
+                            className="flex items-center gap-2 p-2 rounded-xl bg-white border border-slate-100 hover:border-primary/30 hover:bg-primary/5 transition-all group/file"
+                          >
+                            <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center overflow-hidden">
+                              {isImg ? (
+                                <img src={f.url} className="w-full h-full object-cover" />
+                              ) : (
+                                <FileIcon className="w-4 h-4 text-slate-400" />
+                              )}
+                            </div>
+                            <span className="text-[10px] font-medium text-slate-600 group-hover/file:text-primary">Arquivo {idx + 1}</span>
+                            <ExternalLink className="w-3 h-3 text-slate-300 group-hover/file:text-primary" />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-32 bg-white rounded-[2rem] border-2 border-dashed border-slate-200">
+              <div className="bg-slate-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <FileText className="w-10 h-10 text-slate-300" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-700">Nenhum documento encontrado</h3>
+              <p className="text-muted-foreground mt-2">Comece fazendo o upload do seu primeiro exame.</p>
+            </div>
+          )}
         </div>
 
-        {/* Documents List */}
-        {loading ? (
-          <div className="text-center py-20 text-primary font-medium animate-pulse">Carregando seus arquivos...</div>
-        ) : documents.length > 0 ? (
-          <div className="bg-white rounded-[1.5rem] border shadow-sm overflow-hidden">
-            {documents.map((doc, index) => {
-              const isImage = doc.type?.startsWith("image/");
-              const isPdf = doc.type === "application/pdf";
-              return (
-                <div
-                  key={doc.id}
-                  className={`flex items-center gap-4 px-6 py-4 group hover:bg-slate-50 transition-colors ${index !== 0 ? "border-t" : ""}`}
-                >
-                  {/* Thumbnail */}
-                  <div className="w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center overflow-hidden bg-slate-100">
-                    {isImage ? (
-                      <img src={doc.url} alt={doc.name} className="w-full h-full object-cover" />
-                    ) : isPdf ? (
-                      <div className="bg-red-50 w-full h-full flex items-center justify-center rounded-xl">
-                        <FileIcon className="w-6 h-6 text-red-400" />
-                      </div>
-                    ) : (
-                      <FileIcon className="w-6 h-6 text-slate-400" />
-                    )}
-                  </div>
-
-                  {/* Name + date */}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-foreground truncate">{doc.name}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{new Date(doc.createdAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}</p>
-                  </div>
-
-                  {/* Category badge */}
-                  <Badge variant="outline" className="hidden sm:flex text-[10px] uppercase tracking-widest font-bold border-primary/20 text-primary rounded-full flex-shrink-0">
-                    {DOC_TYPES.find(t => t.id === doc.category)?.label || doc.category}
-                  </Badge>
-
-                  {/* Type pill */}
-                  {isPdf && (
-                    <span className="hidden md:inline-flex text-[10px] font-bold uppercase tracking-widest text-red-400 bg-red-50 px-2.5 py-1 rounded-full flex-shrink-0">PDF</span>
-                  )}
-                  {isImage && (
-                    <span className="hidden md:inline-flex text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-2.5 py-1 rounded-full flex-shrink-0">Imagem</span>
-                  )}
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button variant="ghost" size="icon" title="Abrir" className="w-9 h-9 rounded-xl" onClick={() => window.open(doc.url, "_blank")}>
-                      <ExternalLink className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" title="Renomear" className="w-9 h-9 rounded-xl" onClick={() => { setEditingDoc({ id: doc.id, name: doc.name }); setEditName(doc.name); }}>
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" title="Excluir" className="w-9 h-9 rounded-xl text-red-400 hover:text-red-600 hover:bg-red-50" onClick={() => setDeleteConfirmId(doc.id)}>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="text-center py-32 bg-white rounded-[2rem] border-2 border-dashed border-slate-200">
-             <div className="bg-slate-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <FileText className="w-10 h-10 text-slate-300" />
-             </div>
-             <h3 className="text-xl font-bold text-slate-700">Nenhum documento encontrado</h3>
-             <p className="text-muted-foreground mt-2">Comece fazendo o upload do seu primeiro exame.</p>
-          </div>
-        )}
-      </div>
-
-      {/* Upload Modal (Simple absolute positioned div for now) */}
-      {showUploadModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-in fade-in duration-300">
-           <Card className="w-full max-w-lg border-none shadow-2xl bg-white rounded-[2rem] overflow-hidden">
+        {/* Upload Modal (Simple absolute positioned div for now) */}
+        {showUploadModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-in fade-in duration-300">
+            <Card className="w-full max-w-lg border-none shadow-2xl bg-white rounded-[2rem] overflow-hidden">
               <div className="p-6 border-b flex items-center justify-between">
-                 <CardTitle className="text-xl font-black">Upload de Documento</CardTitle>
-                 <Button variant="ghost" size="icon" onClick={() => setShowUploadModal(false)}>
-                    <X className="w-6 h-6" />
-                 </Button>
+                <CardTitle className="text-xl font-black">Upload de Documento</CardTitle>
+                <Button variant="ghost" size="icon" onClick={() => setShowUploadModal(false)}>
+                  <X className="w-6 h-6" />
+                </Button>
               </div>
               <form onSubmit={handleUpload} className="p-8 space-y-6">
-                 <div className="space-y-2">
-                    <label className="text-sm font-bold text-foreground">Título do Documento</label>
-                    <Input 
-                      placeholder="Ex: Morfológica 1º Trimestre" 
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      required
-                      className="h-12 rounded-xl"
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-foreground">Título do Documento</label>
+                  <Input
+                    placeholder="Ex: Morfológica 1º Trimestre"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    required
+                    className="h-12 rounded-xl"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-foreground">Tipo</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {DOC_TYPES.map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => setType(t.id)}
+                        className={`px-4 py-3 rounded-xl text-xs font-bold transition-all border-2 ${type === t.id
+                          ? "border-primary bg-primary/5 text-primary"
+                          : "border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200"
+                          }`}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-foreground">Arquivos (Selecione um ou mais)</label>
+                  <label className="relative group block cursor-pointer">
+                    <Input
+                      type="file"
+                      multiple
+                      onChange={(e) => {
+                        const newFiles = Array.from(e.target.files || []);
+                        setFiles(prev => [...prev, ...newFiles]);
+                      }}
+                      className="sr-only"
                     />
-                 </div>
-
-                 <div className="space-y-2">
-                    <label className="text-sm font-bold text-foreground">Tipo</label>
-                    <div className="grid grid-cols-2 gap-2">
-                       {DOC_TYPES.map((t) => (
-                          <button
-                            key={t.id}
-                            type="button"
-                            onClick={() => setType(t.id)}
-                            className={`px-4 py-3 rounded-xl text-xs font-bold transition-all border-2 ${
-                              type === t.id 
-                                ? "border-primary bg-primary/5 text-primary" 
-                                : "border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200"
-                            }`}
-                          >
-                             {t.label}
-                          </button>
-                       ))}
+                    <div className="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center group-hover:border-primary/50 group-hover:bg-primary/5 transition-all">
+                      {files.length > 0 ? (
+                        <div className="space-y-3">
+                          <div className="flex flex-wrap gap-2 justify-center">
+                            {files.map((f, i) => (
+                              <div key={i} className="bg-primary/10 px-3 py-1.5 rounded-xl flex items-center gap-2 group/file">
+                                <span className="text-[10px] font-bold text-primary truncate max-w-[120px]">{f.name}</span>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    setFiles(prev => prev.filter((_, idx) => idx !== i));
+                                  }}
+                                  className="text-primary hover:text-red-500"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="pt-2 border-t border-dashed">
+                            <p className="text-[10px] text-muted-foreground font-medium">Clique para adicionar mais arquivos</p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="bg-slate-50 p-4 rounded-full group-hover:bg-primary/10 transition-colors">
+                            <Upload className="w-8 h-8 text-slate-300 group-hover:text-primary transition-colors" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-slate-700">Clique para selecionar</p>
+                            <p className="text-xs text-slate-400 mt-1">Você pode enviar vários arquivos de uma vez</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                 </div>
+                  </label>
+                </div>
 
-                 <div className="space-y-2">
-                    <label className="text-sm font-bold text-foreground">Arquivo (PDF, JPG, PNG)</label>
-                    <label className="relative group block cursor-pointer">
-                       <Input 
-                         type="file" 
-                         onChange={(e) => setFile(e.target.files?.[0] || null)}
-                         required
-                         className="sr-only"
-                       />
-                       <div className="border-2 border-dashed border-slate-200 rounded-2xl p-10 text-center group-hover:border-primary/50 group-hover:bg-primary/5 transition-all">
-                          {file ? (
-                             <div className="flex flex-col items-center justify-center gap-3 text-primary font-bold">
-                                <div className="bg-primary/10 p-3 rounded-full">
-                                   <FileImage className="w-8 h-8" />
-                                </div>
-                                <span className="text-sm truncate max-w-xs">{file.name}</span>
-                                <Button variant="link" size="sm" className="text-xs h-auto p-0" onClick={(e) => { e.preventDefault(); setFile(null); }}>Trocar arquivo</Button>
-                             </div>
-                          ) : (
-                             <div className="flex flex-col items-center gap-3">
-                                <div className="bg-slate-50 p-4 rounded-full group-hover:bg-primary/10 transition-colors">
-                                   <Upload className="w-8 h-8 text-slate-300 group-hover:text-primary transition-colors" />
-                                </div>
-                                <div>
-                                   <p className="text-sm font-bold text-slate-700">Clique para selecionar</p>
-                                   <p className="text-xs text-slate-400 mt-1">Ou arraste o arquivo aqui</p>
-                                </div>
-                             </div>
-                          )}
-                       </div>
-                    </label>
-                 </div>
+                {uploadError && (
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700 font-medium">
+                    ⚠️ {uploadError}
+                  </div>
+                )}
 
-                 {uploadError && (
-                    <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700 font-medium">
-                       ⚠️ {uploadError}
-                    </div>
-                 )}
-
-                 <Button 
-                   type="submit" 
-                   disabled={isUploading || !file}
-                   className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-lg font-bold shadow-xl shadow-primary/20"
-                 >
-                    {isUploading ? "Fazendo upload..." : "Salvar Documento"}
-                 </Button>
+                <Button
+                  type="submit"
+                  disabled={isUploading || files.length === 0}
+                  className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-lg font-bold shadow-xl shadow-primary/20"
+                >
+                  {isUploading ? "Fazendo upload..." : "Salvar Documento"}
+                </Button>
               </form>
-           </Card>
-        </div>
-      )}
-    </MainLayout>
+            </Card>
+          </div>
+        )}
+      </MainLayout>
 
       {/* Edit Name Modal */}
       {editingDoc && (
@@ -410,6 +442,142 @@ export default function DocumentsPage() {
           </Card>
         </div>
       )}
+      {/* Document Viewer Modal */}
+      <AnimatePresence>
+        {viewerState && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-10">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setViewerState(null)}
+              className="absolute inset-0 bg-slate-900/90 backdrop-blur-md"
+            />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-5xl h-full max-h-[85vh] bg-white rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col"
+            >
+              {/* Header */}
+              <div className="p-6 border-b flex items-center justify-between bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+                <div className="flex items-center gap-4">
+                  <div className="bg-primary/10 p-2 rounded-xl text-primary">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-foreground">{viewerState.doc.name}</h3>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
+                      Arquivo {viewerState.index + 1} de {viewerState.doc.files?.length}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => window.open(viewerState.doc.files[viewerState.index].url, "_blank")}
+                    className="rounded-xl hover:bg-slate-100"
+                    title="Abrir em nova aba"
+                  >
+                    <ExternalLink className="w-5 h-5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setViewerState(null)}
+                    className="rounded-xl hover:bg-red-50 hover:text-red-500"
+                  >
+                    <X className="w-6 h-6" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Content Area with Navigation */}
+              <div className="flex-1 bg-slate-50 relative flex items-center justify-center p-4 overflow-hidden">
+                {/* Navigation Buttons */}
+                {viewerState.doc.files?.length > 1 && (
+                  <>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const newIdx = (viewerState.index - 1 + viewerState.doc.files.length) % viewerState.doc.files.length;
+                        setViewerState({ ...viewerState, index: newIdx });
+                      }}
+                      className="absolute left-4 z-20 w-12 h-12 rounded-full bg-white/80 backdrop-blur-sm shadow-lg flex items-center justify-center hover:bg-white transition-all active:scale-90 text-slate-700"
+                    >
+                      <ChevronLeft className="w-6 h-6" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const newIdx = (viewerState.index + 1) % viewerState.doc.files.length;
+                        setViewerState({ ...viewerState, index: newIdx });
+                      }}
+                      className="absolute right-4 z-20 w-12 h-12 rounded-full bg-white/80 backdrop-blur-sm shadow-lg flex items-center justify-center hover:bg-white transition-all active:scale-90 text-slate-700"
+                    >
+                      <ChevronRight className="w-6 h-6" />
+                    </button>
+                  </>
+                )}
+
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={viewerState.doc.files[viewerState.index].id}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.2 }}
+                    className="w-full h-full flex items-center justify-center"
+                  >
+                    {viewerState.doc.files[viewerState.index].type?.startsWith("image/") ? (
+                      <img
+                        src={viewerState.doc.files[viewerState.index].url}
+                        alt="Documento"
+                        className="max-w-full max-h-full object-contain rounded-lg shadow-sm"
+                      />
+                    ) : viewerState.doc.files[viewerState.index].type === "application/pdf" ? (
+                      <iframe
+                        src={viewerState.doc.files[viewerState.index].url}
+                        className="w-full h-full rounded-lg border-none"
+                        title="PDF Viewer"
+                      />
+                    ) : (
+                      <div className="text-center space-y-4">
+                        <div className="bg-white p-8 rounded-[2rem] shadow-sm inline-block">
+                          <FileIcon className="w-16 h-16 text-slate-300 mx-auto" />
+                        </div>
+                        <p className="text-muted-foreground font-medium">Este tipo de arquivo não pode ser visualizado diretamente.</p>
+                        <Button
+                          onClick={() => window.open(viewerState.doc.files[viewerState.index].url, "_blank")}
+                          className="bg-primary rounded-xl font-bold"
+                        >
+                          Abrir em nova aba
+                        </Button>
+                      </div>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              {/* Footer / Thumbnails indicator */}
+              {viewerState.doc.files?.length > 1 && (
+                <div className="p-4 border-t bg-white flex justify-center gap-2">
+                  {viewerState.doc.files.map((_: any, i: number) => (
+                    <button
+                      key={i}
+                      onClick={() => setViewerState({ ...viewerState, index: i })}
+                      className={`h-1.5 rounded-full transition-all duration-300 ${i === viewerState.index ? "w-8 bg-primary" : "w-2 bg-slate-200"
+                        }`}
+                    />
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

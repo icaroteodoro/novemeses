@@ -130,11 +130,15 @@ export default function PregnancyPage() {
                <CardContent className="p-8 space-y-6">
                   <div>
                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">Data Prevista do Parto (DPP)</p>
-                     <p className="text-2xl font-black text-foreground">{new Date(pregnancy.dueDate).toLocaleDateString()}</p>
+                     <p className="text-2xl font-black text-foreground">
+                        {pregnancy.dueDate ? pregnancy.dueDate.split('T')[0].split('-').reverse().join('/') : "---"}
+                     </p>
                   </div>
                   <div>
                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">Início (DUM)</p>
-                     <p className="text-xl font-bold text-slate-700">{new Date(pregnancy.startDate).toLocaleDateString()}</p>
+                     <p className="text-xl font-bold text-slate-700">
+                        {pregnancy.startDate ? pregnancy.startDate.split('T')[0].split('-').reverse().join('/') : "---"}
+                     </p>
                   </div>
                   <div className="p-4 bg-secondary/5 rounded-2xl border border-secondary/20">
                      <p className="text-sm text-secondary-foreground font-medium italic">

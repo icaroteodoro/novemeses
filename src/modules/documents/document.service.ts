@@ -13,34 +13,48 @@ export class DocumentService {
   async uploadDocument(data: {
     pregnancyId: string;
     name: string;
-    file: Buffer | Blob | Uint8Array;
+    files: { buffer: Buffer | Blob | Uint8Array; type: string; originalName: string }[];
     category: string;
-    type: string;
   }) {
-    const filePath = `documents/${data.pregnancyId}/${Date.now()}-${data.name}`;
-    const url = await this.storageService.uploadFile(filePath, data.file, data.type);
+    const uploadedFiles = await Promise.all(data.files.map(async (file) => {
+      const filePath = `documents/${data.pregnancyId}/${Date.now()}-${file.originalName}`;
+      const url = await this.storageService.uploadFile(filePath, file.buffer, file.type);
+      return { url, type: file.type };
+    }));
 
     const doc = await this.documentRepository.create({
       pregnancyId: data.pregnancyId,
       name: data.name,
-      url,
       category: data.category,
-      type: data.type,
+      files: uploadedFiles,
     });
+
+    // Generate signed URLs for the return object
+    const filesWithSignedUrls = await Promise.all((doc as any).files.map(async (f: any) => ({
+      ...f,
+      url: await this.storageService.getSignedUrl(f.url),
+    })));
 
     return {
       ...doc,
-      url: await this.storageService.getSignedUrl(doc.url),
+      files: filesWithSignedUrls,
     };
   }
 
   async getDocumentsByPregnancy(pregnancyId: string) {
     const docs = await this.documentRepository.findByPregnancyId(pregnancyId);
     
-    // Generate signed URLs for each document
-    return Promise.all(docs.map(async (doc) => ({
-      ...doc,
-      url: await this.storageService.getSignedUrl(doc.url),
-    })));
+    // Generate signed URLs for each file in each document
+    return Promise.all(docs.map(async (doc) => {
+      const filesWithSignedUrls = await Promise.all((doc as any).files.map(async (f: any) => ({
+        ...f,
+        url: await this.storageService.getSignedUrl(f.url),
+      })));
+
+      return {
+        ...doc,
+        files: filesWithSignedUrls,
+      };
+    }));
   }
 }
